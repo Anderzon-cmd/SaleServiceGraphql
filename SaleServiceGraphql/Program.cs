@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 using Microsoft.IdentityModel.Tokens;
 using SaleServiceGraphql.Data;
 using SaleServiceGraphql.Services;
@@ -20,19 +20,32 @@ builder.Services.AddAuthentication().AddJwtBearer(opt =>
         ClockSkew = TimeSpan.Zero,
         IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:SecretKey"]!))
     };
-
 });
 
+// Configure MongoDB
+builder.Services.AddSingleton<IMongoClient>(serviceProvider =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("MongoDB");
+    return new MongoClient(connectionString);
+});
+
+builder.Services.AddScoped<IMongoDatabase>(serviceProvider =>
+{
+    var client = serviceProvider.GetRequiredService<IMongoClient>();
+    var databaseName = builder.Configuration["MongoDB:DatabaseName"];
+    return client.GetDatabase(databaseName);
+});
+
+builder.Services.AddScoped<SaleContext>();
 
 builder.Services
-    .AddDbContextFactory<SaleContext>(opt =>
-    {
-        opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
-    })
     .AddGraphQLServer()
     .AddAuthorization()
     .AddApolloFederation()
-    .AddMutationConventions();
+    .AddMutationConventions()
+    .AddMongoDbFiltering()
+    .AddMongoDbSorting()
+    .AddMongoDbProjections();
 
 builder.AddGraphQL()
     .AddTypes();
@@ -50,11 +63,8 @@ app.UseCors(opt =>
     opt.WithOrigins(["http://localhost:4000","http://localhost:5173"]);
 });
 
-
 app.UseAuthentication();
 app.UseAuthorization();
-
-
 
 app.MapGraphQL();
 

@@ -1,5 +1,5 @@
 ﻿
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 using SaleServiceGraphql.Data;
 using SaleServiceGraphql.Exceptions;
 using SaleServiceGraphql.Models;
@@ -7,23 +7,23 @@ using SaleServiceGraphql.Inputs.Category;
 
 namespace SaleServiceGraphql.Services
 {
-    public sealed class CategoryService : IAsyncDisposable
+    public sealed class CategoryService
     {
         private readonly SaleContext _saleContext;
 
-        public CategoryService(IDbContextFactory<SaleContext> saleContextFactory)
+        public CategoryService(SaleContext saleContext)
         {
-            _saleContext = saleContextFactory.CreateDbContext();
+            _saleContext = saleContext;
         }
 
-        public async Task<Category?> GetCategoryByIdAsync(int id)
+        public async Task<Category?> GetCategoryByIdAsync(string id)
         {
-            return await _saleContext.Categories.FindAsync(id);
+            return await _saleContext.Categories.Find(c => c.Id == id).FirstOrDefaultAsync();
         }
 
         public async Task<List<Category>> GetCategoriesAsync()
         {
-            return await _saleContext.Categories.ToListAsync();
+            return await _saleContext.Categories.Find(_ => true).ToListAsync();
         }
 
         public async Task<Category> CreateCategoryAsync(AddCategoryInput input)
@@ -33,10 +33,8 @@ namespace SaleServiceGraphql.Services
                 Name = input.Name,
             };
 
-            _saleContext.Categories.Add(category);
-            await _saleContext.SaveChangesAsync();
+            await _saleContext.Categories.InsertOneAsync(category);
             return category;
-
         }
 
         public async Task<Category> UpdateCategoryAsync(UpdateCategoryInput input)
@@ -51,12 +49,11 @@ namespace SaleServiceGraphql.Services
             category.Description = input.Description;
             category.Name = input.Name;
         
-            await _saleContext.SaveChangesAsync();
+            await _saleContext.Categories.ReplaceOneAsync(c => c.Id == input.Id, category);
             return category;
-
         }
 
-        public async Task<Category> DeleteCategoryByIdAsync(int id)
+        public async Task<Category> DeleteCategoryByIdAsync(string id)
         {
             var category = await GetCategoryByIdAsync(id);
 
@@ -65,16 +62,8 @@ namespace SaleServiceGraphql.Services
                 throw new NotFoundException("Category not found.");
             }
 
-            _saleContext.Remove(category);
-            await _saleContext.SaveChangesAsync();
+            await _saleContext.Categories.DeleteOneAsync(c => c.Id == id);
             return category;
-
-        }
-
-
-        public ValueTask DisposeAsync()
-        {
-            return _saleContext.DisposeAsync();
         }
     }
 }

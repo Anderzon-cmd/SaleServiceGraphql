@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MongoDB.Driver;
 using SaleServiceGraphql.Data;
 using SaleServiceGraphql.Inputs.Product;
 using SaleServiceGraphql.Models;
@@ -8,9 +8,10 @@ namespace SaleServiceGraphql.Services
     public class ProductService
     {
         private readonly SaleContext _saleContext;
-        public ProductService(IDbContextFactory<SaleContext> contextFactory)
+        
+        public ProductService(SaleContext saleContext)
         {
-            _saleContext = contextFactory.CreateDbContext();
+            _saleContext = saleContext;
         }
 
         public async Task<Product> CreateProductAsync(AddProductInput input)
@@ -25,15 +26,24 @@ namespace SaleServiceGraphql.Services
                 Price = input.Price,
                 ImageUrl = input.ImageUrl,
             };
-             _saleContext.Add(product);
-            await _saleContext.SaveChangesAsync();
+            
+            await _saleContext.Products.InsertOneAsync(product);
             return product;
-
         }
 
         public async Task<IEnumerable<Product>> GetAllProductsAsync()
         {
-            return await _saleContext.Products.Include(x=>x.Mark).Include(x=>x.Category).ToListAsync();
+            return await _saleContext.Products.Find(_ => true).ToListAsync();
+        }
+
+        public async Task<Product?> GetProductByIdAsync(string id)
+        {
+            return await _saleContext.Products.Find(p => p.Id == id).FirstOrDefaultAsync();
+        }
+
+        public async Task<IEnumerable<Product>> GetProductsByCategoryIdAsync(string categoryId)
+        {
+            return await _saleContext.Products.Find(p => p.CategoryId == categoryId).ToListAsync();
         }
     }
 }

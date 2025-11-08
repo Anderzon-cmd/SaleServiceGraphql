@@ -1,5 +1,5 @@
 ﻿
-using Microsoft.EntityFrameworkCore;
+using MongoDB.Driver;
 using SaleServiceGraphql.Data;
 using SaleServiceGraphql.Exceptions;
 using SaleServiceGraphql.Inputs.Mark;
@@ -7,22 +7,23 @@ using SaleServiceGraphql.Models;
 
 namespace SaleServiceGraphql.Services
 {
-    public class MarkService : IAsyncDisposable
+    public class MarkService
     {
         private readonly SaleContext _saleContext;
-        public MarkService(IDbContextFactory<SaleContext> saleContextFactory)
+        
+        public MarkService(SaleContext saleContext)
         {
-            _saleContext = saleContextFactory.CreateDbContext();
+            _saleContext = saleContext;
         }
 
-        public async Task<Mark?> GetMarkByIdAsync(int id)
+        public async Task<Mark?> GetMarkByIdAsync(string id)
         {
-            return await _saleContext.Marks.FindAsync(id);
+            return await _saleContext.Marks.Find(m => m.Id == id).FirstOrDefaultAsync();
         }
 
         public async Task<List<Mark>> GetMarksAsync()
         {
-            return await _saleContext.Marks.ToListAsync();
+            return await _saleContext.Marks.Find(_ => true).ToListAsync();
         }
 
         public async Task<Mark> CreateMarkAsync(AddMarkInput input)
@@ -33,10 +34,8 @@ namespace SaleServiceGraphql.Services
                 Name = input.Name,
             };
 
-            _saleContext.Marks.Add(mark);
-            await _saleContext.SaveChangesAsync();
+            await _saleContext.Marks.InsertOneAsync(mark);
             return mark;
-
         }
 
         public async Task<Mark> UpdateMarkAsync(UpdateMarkInput input)
@@ -51,12 +50,11 @@ namespace SaleServiceGraphql.Services
             mark.Description = input.Description;
             mark.Name = input.Name;
 
-            await _saleContext.SaveChangesAsync();
+            await _saleContext.Marks.ReplaceOneAsync(m => m.Id == input.Id, mark);
             return mark;
-
         }
 
-        public async Task<Mark> DeleteMarkByIdAsync(int id)
+        public async Task<Mark> DeleteMarkByIdAsync(string id)
         {
             var mark = await GetMarkByIdAsync(id);
 
@@ -65,15 +63,8 @@ namespace SaleServiceGraphql.Services
                 throw new NotFoundException("Mark not found.");
             }
 
-            _saleContext.Remove(mark);
-            await _saleContext.SaveChangesAsync();
+            await _saleContext.Marks.DeleteOneAsync(m => m.Id == id);
             return mark;
-
-        }
-
-        public ValueTask DisposeAsync()
-        {
-            return _saleContext.DisposeAsync();
         }
     }
 }

@@ -14,7 +14,7 @@ namespace SaleServiceGraphql.Queries
             return await categoryService.GetCategoriesAsync();
         }
         
-        public static async Task<Category?> GetCategoryById(int id,CategoryService categoryService)
+        public static async Task<Category?> GetCategoryById(string id,CategoryService categoryService)
         {
             return await categoryService.GetCategoryByIdAsync(id);
         }

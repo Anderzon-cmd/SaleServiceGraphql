@@ -22,7 +22,7 @@ namespace SaleServiceGraphql.Mutations
         }
 
         [Error<NotFoundException>]
-        public static async Task<Category> DeleteCategory(int id,CategoryService categoryService)
+        public static async Task<Category> DeleteCategory(string id,CategoryService categoryService)
         {
             return await categoryService.DeleteCategoryByIdAsync(id);
 

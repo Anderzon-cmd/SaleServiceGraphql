@@ -1,31 +1,33 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using MongoDB.Driver;
 using SaleServiceGraphql.Data;
 using SaleServiceGraphql.Models;
 
 namespace SaleServiceGraphql.DataLoaders
 {
-    public class ProductByCategoryIdDataLoader:BatchDataLoader<int,Product[]>
+    public class ProductByCategoryIdDataLoader : BatchDataLoader<string, Product[]>
     {
-        private readonly IDbContextFactory<SaleContext> _dbContextFactory;
+        private readonly SaleContext _saleContext;
 
         public ProductByCategoryIdDataLoader(
-            IDbContextFactory<SaleContext> contextFactory,
+            SaleContext saleContext,
             IBatchScheduler batchScheduler, 
             DataLoaderOptions options) : base(batchScheduler, options)
         {
-            _dbContextFactory = contextFactory;
+            _saleContext = saleContext;
         }
 
-        protected override async Task<IReadOnlyDictionary<int, Product[]>> LoadBatchAsync(IReadOnlyList<int> keys, CancellationToken cancellationToken)
+        protected override async Task<IReadOnlyDictionary<string, Product[]>> LoadBatchAsync(IReadOnlyList<string> keys, CancellationToken cancellationToken)
         {
-            using SaleContext saleContext = _dbContextFactory.CreateDbContext();
-            return await saleContext.Products
-                .Where(p=>keys.Contains(p.CategoryId))
-                .GroupBy(p=>p.CategoryId)
-                .Select(t=>new {t.Key,Items=t.OrderBy(p=>p.Name).ToArray()})
-                .ToDictionaryAsync(t=>t.Key,t=>t.Items,cancellationToken);
-                
-                
+            var products = await _saleContext.Products
+                .Find(p => keys.Contains(p.CategoryId))
+                .ToListAsync(cancellationToken);
+
+            return products
+                .GroupBy(p => p.CategoryId)
+                .ToDictionary(
+                    group => group.Key, 
+                    group => group.OrderBy(p => p.Name).ToArray()
+                );
         }
     }
 }

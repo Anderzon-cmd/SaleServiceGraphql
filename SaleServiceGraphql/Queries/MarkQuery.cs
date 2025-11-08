@@ -11,7 +11,7 @@ namespace SaleServiceGraphql.Queries
             return await markService.GetMarksAsync();
         }
 
-        public async static Task<Mark?> GetMark(int id,MarkService markService)
+        public async static Task<Mark?> GetMark(string id,MarkService markService)
         {
             return await markService.GetMarkByIdAsync(id);
         }

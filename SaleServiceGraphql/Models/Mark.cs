@@ -1,12 +1,19 @@
 ﻿using HotChocolate.ApolloFederation.Types;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 
 namespace SaleServiceGraphql.Models
 {
     public class Mark
     {
-        [Key]
-        public int Id { get; set; }
-        public string Name { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
+        
+        [BsonElement("name")]
+        public required string Name { get; set; }
+        
+        [BsonElement("description")]
         public string? Description { get; set; }
     }
 }

@@ -6,7 +6,7 @@
         string? ImageUrl,
         int Stock,
         float Price,
-        int CategoryId,
-        int MarkId
+        string CategoryId,
+        string MarkId
         );
 }

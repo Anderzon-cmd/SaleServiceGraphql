@@ -21,7 +21,7 @@ namespace SaleServiceGraphql.Mutations
         }
 
         [Error<NotFoundException>]
-        public static async Task<Mark> DeleteMark(int id, MarkService markService)
+        public static async Task<Mark> DeleteMark(string id, MarkService markService)
         {
             return await markService.DeleteMarkByIdAsync(id);
         }

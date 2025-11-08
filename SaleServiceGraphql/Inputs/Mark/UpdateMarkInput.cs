@@ -1,7 +1,7 @@
 ﻿namespace SaleServiceGraphql.Inputs.Mark
 {
     public sealed record UpdateMarkInput(
-        int Id,
+        string Id,
         string Name,
         string? Description
         );

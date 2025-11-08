@@ -12,7 +12,7 @@ namespace SaleServiceGraphql.Queries
             return await productService.GetAllProductsAsync();
         }
         public static async Task<Product?> GetProductByIdAsync(
-            int id,
+            string id,
             ProductByIdDataLoader productByIdDataLoader,
             CancellationToken cancellationToken
             )
