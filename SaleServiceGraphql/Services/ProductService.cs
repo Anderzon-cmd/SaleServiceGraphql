@@ -33,7 +33,7 @@ namespace SaleServiceGraphql.Services
 
         public async Task<IEnumerable<Product>> GetAllProductsAsync()
         {
-            return await _saleContext.Products.ToListAsync();
+            return await _saleContext.Products.Include(x=>x.Mark).Include(x=>x.Category).ToListAsync();
         }
     }
 }

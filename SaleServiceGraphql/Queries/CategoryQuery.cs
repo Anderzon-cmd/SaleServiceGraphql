@@ -6,7 +6,7 @@ using SaleServiceGraphql.Services;
 namespace SaleServiceGraphql.Queries
 {
     [QueryType]
-    [Authorize]
+    //[Authorize]
     public static class CategoryQuery
     {
         public static async Task<List<Category>> GetCategories(CategoryService categoryService)

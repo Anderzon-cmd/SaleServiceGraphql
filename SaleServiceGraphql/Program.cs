@@ -31,6 +31,7 @@ builder.Services
     })
     .AddGraphQLServer()
     .AddAuthorization()
+    .AddApolloFederation()
     .AddMutationConventions();
 
 builder.AddGraphQL()
@@ -46,7 +47,7 @@ app.UseCors(opt =>
 {
     opt.AllowAnyHeader();
     opt.AllowAnyMethod();
-    opt.WithOrigins(["http://localhost:4000"]);
+    opt.WithOrigins(["http://localhost:4000","http://localhost:5173"]);
 });
 
 
